@@ -5,6 +5,8 @@ import urllib.parse
 import boto3
 import cv2
 import time
+import random
+import uuid
 
 import torch
 import torchvision.transforms as transforms
@@ -16,9 +18,17 @@ import build_custom_model
 LABELS_DIR = os.path.abspath('./checkpoint/labels.json')
 MODEL_PATH = os.path.abspath("./checkpoint/model_vggface2_best.pth")
 
+student_table_name = 'student_table'
+RESULT_QUEUE_NAME = 'result_queue.fifo'
+AWS_QUEUE_URL = 'QueueUrl'
+#message group id of result fifo queue
+MESSAGE_GROUP_ID = 'RESPONSE_GROUP'
+
 print('Loading function..')
 
-s3_client = boto3.client('s3')
+s3_client = boto3.client('s3')    
+dynamo_db_client = boto3.client('dynamodb')
+sqs_client = boto3.client('sqs')
 
 start = time.time()
 with open(LABELS_DIR, encoding="utf8") as f:
@@ -35,12 +45,7 @@ print("Total time taken to load model : " , end - start)
 
 def handler(event, context):
     print('my lambda')
-    print(LABELS)
 
-    print('----')   
-
-    print("event:\n",event)
-    print("\ncontext:\n",context)
 
     # Get the object from the event and show its content type
     bucket = event['Records'][0]['s3']['bucket']['name']
@@ -61,8 +66,14 @@ def handler(event, context):
         prediction = predict(frame)
         print("Prediction generated!")
         print(prediction)
+            
+        data = get_student_data(prediction)
+
+        print(data)
         
-        return {'prediction': prediction}
+        send_sqs_message(data)
+
+        return {'prediction': data}
 
     except Exception as e:
         print(e)
@@ -81,6 +92,38 @@ def predict(image_array):
     result = LABELS[np.array(predicted.cpu())[0]]
 
     return result
+
+def get_student_data(name) :
+    response = dynamo_db_client.get_item(
+    TableName=student_table_name,
+        Key={
+            'name': {'S' : name}
+        }
+    )
+    
+    data = {
+        'student_year': response['Item']['major']['S'],
+        'student_major': response['Item']['year']['S'],
+        'student_name': response['Item']['name']['S'],
+    }
+
+    return data
+
+def send_sqs_message(sqs_message) :
+    sqs_message['video_interval_id'] = str(random.randrange(1, 300, 1)) # TODO: change to id from video/image name
+    queue_url = get_response_queue_url(sqs_client)
+    sqs_client.send_message(QueueUrl=queue_url,MessageBody=str(sqs_message),MessageGroupId=MESSAGE_GROUP_ID,MessageDeduplicationId = str(uuid.uuid4()) )
+
+
+def get_response_queue_url(sqs_client):
+    queue_url = None
+    try:
+        queue_url = sqs_client.get_queue_url(QueueName=RESULT_QUEUE_NAME)[AWS_QUEUE_URL]
+    except sqs_client.exceptions.QueueDoesNotExist:
+        sqs_client.create_queue(QueueName=RESULT_QUEUE_NAME)
+        queue_url = sqs_client.get_queue_url(QueueName=RESULT_QUEUE_NAME)[AWS_QUEUE_URL]
+    return queue_url
+
 
 # if __name__ == "__main__":
 #     path = '/Users/karthik/Desktop/ASU/CC/video3.h264'
