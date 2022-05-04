@@ -69,6 +69,11 @@ def handler(event, context):
             
         data = get_student_data(prediction)
 
+        arr = tmpkey.split("-")
+        timestamp = arr[1]
+        video_id = arr[2].split(".")[0]
+        data['video_interval_id'] = video_id
+        data['s_time'] = timestamp
         print(data)
         
         send_sqs_message(data)
@@ -110,7 +115,7 @@ def get_student_data(name) :
     return data
 
 def send_sqs_message(sqs_message) :
-    sqs_message['video_interval_id'] = str(random.randrange(1, 300, 1)) # TODO: change to id from video/image name
+    #sqs_message['video_interval_id'] = str(random.randrange(1, 300, 1)) # TODO: change to id from video/image name
     queue_url = get_response_queue_url(sqs_client)
     sqs_client.send_message(QueueUrl=queue_url,MessageBody=str(sqs_message),MessageGroupId=MESSAGE_GROUP_ID,MessageDeduplicationId = str(uuid.uuid4()) )
 
