@@ -18,11 +18,7 @@ import utils
 
 LABELS_DIR = os.path.abspath('./checkpoint/labels.json')
 MODEL_PATH = os.path.abspath("./checkpoint/model_vggface2_best.pth")
-
 student_table_name = 'student_table'
-RESULT_QUEUE_NAME = 'result_queue.fifo'
-AWS_QUEUE_URL = 'QueueUrl'
-MESSAGE_GROUP_ID = 'RESPONSE_GROUP'
 
 print('Loading function..')
 
@@ -63,6 +59,7 @@ def handler(event, context):
         print(e)
         raise e
     
+# Make prediction using the model, given the image.
 def predict(img):
 
     img_tensor = transforms.ToTensor()(img).unsqueeze_(0).to(torch.device('cpu'))
@@ -72,6 +69,7 @@ def predict(img):
 
     return result
 
+# Fetch student data from DynamoDB
 def get_student_data(name) :
     response = dynamo_db_client.get_item(
     TableName = student_table_name,
