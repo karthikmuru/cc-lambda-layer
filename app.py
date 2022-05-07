@@ -63,6 +63,7 @@ def handler(event, context):
         print(e)
         raise e
     
+# Make prediction using the model, given the image.
 def predict(img):
 
     img_tensor = transforms.ToTensor()(img).unsqueeze_(0).to(torch.device('cpu'))
@@ -72,6 +73,7 @@ def predict(img):
 
     return result
 
+# Fetch student data from DynamoDB
 def get_student_data(name) :
     response = dynamo_db_client.get_item(
     TableName = student_table_name,
