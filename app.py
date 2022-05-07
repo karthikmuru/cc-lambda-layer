@@ -18,11 +18,7 @@ import utils
 
 LABELS_DIR = os.path.abspath('./checkpoint/labels.json')
 MODEL_PATH = os.path.abspath("./checkpoint/model_vggface2_best.pth")
-
 student_table_name = 'student_table'
-RESULT_QUEUE_NAME = 'result_queue.fifo'
-AWS_QUEUE_URL = 'QueueUrl'
-MESSAGE_GROUP_ID = 'RESPONSE_GROUP'
 
 print('Loading function..')
 
