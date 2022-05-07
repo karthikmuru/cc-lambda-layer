@@ -38,15 +38,16 @@ print('Loading model weights...')
 
 model = build_custom_model.build_model(len(LABELS)).to(torch.device('cpu'))
 model.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device('cpu'))['model'])
+model.eval()
 end = time.time()
 
 print("Total time taken to load model : " , end - start)
 
 def handler(event, context):
-    print('my lambda')
-
-    data = json.loads(event['body'])    
+    print('FACE-RECOGNIZER-PRO v5')
+    
     try:
+        data = json.loads(event['body'])    
         img = utils.base64_to_image(data['image'])
         print(img)
         prediction = predict(img)
@@ -80,8 +81,8 @@ def get_student_data(name) :
     )
     
     data = {
-        'student_year': response['Item']['major']['S'],
-        'student_major': response['Item']['year']['S'],
+        'student_year': response['Item']['year']['S'],
+        'student_major': response['Item']['major']['S'],
         'student_name': response['Item']['name']['S'],
     }
 

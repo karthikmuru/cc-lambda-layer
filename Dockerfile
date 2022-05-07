@@ -10,6 +10,7 @@ COPY requirements.txt  .
 COPY build_custom_model.py  .
 COPY utils.py  .
 
-RUN  pip3 install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
+RUN pip3 install torch torchvision --extra-index-url https://download.pytorch.org/whl/cpu --target "${LAMBDA_TASK_ROOT}"
+RUN pip3 install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
 
 CMD [ "app.handler" ]
