@@ -38,6 +38,7 @@ def build_model(num_classes):
     model_ft.last_linear = nn.Sequential(
         Flatten(),
         nn.Linear(in_features=1792, out_features=512, bias=False),
+        # nn.Linear(in_features=1024, out_features=256, bias=False),
         normalize()
     )
     # model_ft.logits = nn.Linear(layer_list[3].in_features, len(class_names))
