@@ -1,4 +1,4 @@
-# Lambda Layer
+# Face Recognition using Raspberry Pi and AWS Lambda 
 
 ### Authors
 Harish Kumar Srinivasappa (1219559887) <br>
